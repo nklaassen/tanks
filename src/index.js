@@ -1,8 +1,8 @@
 import * as THREE from 'three'
 import * as Stats from 'stats.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import sand from './sand.jpg'
-import metal from './metal.jpg'
+import sand from '../assets/sand.jpg'
+import metal from '../assets/metal.jpg'
 import Worker from './engine.worker.js'
 import { messageTypes } from './messages.js'
 
