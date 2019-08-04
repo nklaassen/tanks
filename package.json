@@ -1,0 +1,24 @@
+{
+  "name": "tanks",
+  "version": "0.0.0",
+  "description": "tanks app",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "webpack-dev-server --open --host 0.0.0.0",
+    "build": "webpack"
+  },
+  "author": "Nic Klaassen",
+  "license": "ISC",
+  "devDependencies": {
+    "file-loader": "^4.1.0",
+    "webpack": "^4.39.1",
+    "webpack-cli": "^3.3.6",
+    "webpack-dev-server": "^3.7.2",
+    "worker-loader": "^2.0.0"
+  },
+  "dependencies": {
+    "stats.js": "^0.17.0",
+    "three": "^0.107.0"
+  }
+}
