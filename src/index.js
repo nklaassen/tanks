@@ -1,10 +1,17 @@
 import * as THREE from 'three'
 import * as Stats from 'stats.js'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import sand from '../assets/sand.jpg'
 import metal from '../assets/metal.jpg'
+import mars from '../assets/2k_mars.jpg'
+import sky from '../assets/starmap_4k.jpg'
 import Worker from './engine.worker.js'
 import { messageTypes } from './messages.js'
+import skyTop from '../assets/ulukai/redeclipse_up.png'
+import skyBottom from '../assets/ulukai/redeclipse_dn.png'
+import skyLeft from '../assets/ulukai/redeclipse_lf.png'
+import skyRight from '../assets/ulukai/redeclipse_rt.png'
+import skyFront from '../assets/ulukai/redeclipse_ft.png'
+import skyBack from '../assets/ulukai/redeclipse_bk.png'
 
 const UP = 'ArrowUp'
 const DOWN = 'ArrowDown'
@@ -17,6 +24,8 @@ const AXISY = new THREE.Vector3(0, 1, 0)
 const AXISZ = new THREE.Vector3(0, 0, 1)
 
 const GAMETICK = 50 // milliseconds
+
+const planetRadius = 200
 
 const Tank = (function wrapper() {
 	const bodyWidth = 4
@@ -33,107 +42,148 @@ const Tank = (function wrapper() {
 	const barrelLength = 3
 	const barrelGeometry = new THREE.CylinderGeometry(barrelRadius, barrelRadius, barrelLength, 6)
 
-	let tankTexture = new THREE.TextureLoader().load(metal)
-	const material = new THREE.MeshLambertMaterial({ color: 0xa49682, map: tankTexture })
-
-	const rotateZ = new THREE.Quaternion().setFromAxisAngle(AXISZ, 0.1)
-	const rotateZi = new THREE.Quaternion().setFromAxisAngle(AXISZ, -0.1)
+	const tankTexture = new THREE.TextureLoader().load(metal)
+	const material = new THREE.MeshLambertMaterial({ map: tankTexture })
 
 	return function constructor() {
-		this.body = new THREE.Mesh(bodyGeometry, material)
-		this.body.position.set(0, 0, bodyHeight / 2)
+		const body = new THREE.Mesh(bodyGeometry, material)
+		body.position.set(0, 0, bodyHeight / 2)
 
-		this.gunBox = new THREE.Mesh(gunBoxGeometry, material)
-		this.gunBox.position.set(0, 0, (bodyHeight + gunBoxHeight) / 2)
-		this.body.add(this.gunBox)
+		const gunBox = new THREE.Mesh(gunBoxGeometry, material)
+		gunBox.position.set(0, 0, (bodyHeight + gunBoxHeight) / 2)
+		body.add(gunBox)
 
-		this.gun = new THREE.Object3D()
-		this.gun.position.set(0, gunBoxLength / 4, 0)
-		this.gun.rotation.x = Math.PI * 0.1
-		let barrel = new THREE.Mesh(barrelGeometry, material)
+		const gun = new THREE.Object3D()
+		gun.position.set(0, gunBoxLength / 4, 0)
+		const barrel = new THREE.Mesh(barrelGeometry, material)
 		barrel.translateY(barrelLength / 2)
-		this.gun.add(barrel)
-		this.gunBox.add(this.gun)
+		gun.add(barrel)
+		gunBox.add(gun)
 
-		this.root = this.body
+		this.root = body
+		this.root.position.set(0, 0, planetRadius)
 
-		this.update = (goals) => {
-			let a = THREE.Math.clamp(1 - (goals.doneBy - performance.now()) / (GAMETICK), 0.0, 1.0)
-			this.gunBox.rotation.z = THREE.Math.lerp(this.gunBox.rotation.z, goals.gunBox.rotation, a)
-			this.gun.rotation.x = THREE.Math.lerp(this.gun.rotation.x, goals.gun.rotation, a)
+		const initialPosition = this.root.position.clone()
+
+		this.update = (state, prevState, a) => {
+			gunBox.rotation.z = THREE.Math.degToRad(THREE.Math.lerp(
+				prevState.tank.gun.rotationLeft,
+				state.tank.gun.rotationLeft,
+				a))
+			gun.rotation.x = THREE.Math.degToRad(THREE.Math.lerp(
+				prevState.tank.gun.rotationUp,
+				state.tank.gun.rotationUp,
+				a))
+			const q1 = deserializeQuaternion(prevState.tank.quaternion)
+			const q2 = deserializeQuaternion(state.tank.quaternion)
+			const q = q1.slerp(q2, a)
+			this.root.position.copy(initialPosition).applyQuaternion(q)
+			this.root.setRotationFromQuaternion(q)
 		}
 	}
 })()
 
-const World = (function wrapper() {
-	const planetRadius = 100
+function deserializeQuaternion(quaternion) {
+	const q = {...quaternion}
+	q.__proto__ = THREE.Quaternion.prototype
+	return q
+}
+
+const Universe = (function wrapper() {
 	const planetGeometry = new THREE.SphereGeometry(planetRadius, 32, 32)
+	const groundTexture = new THREE.TextureLoader().load(mars)
+	const planetMaterial = new THREE.MeshLambertMaterial({ map: groundTexture })
 
-	let groundTexture = new THREE.TextureLoader().load(sand)
-	groundTexture.wrapS = THREE.RepeatWrapping
-	groundTexture.wrapT = THREE.RepeatWrapping
-	groundTexture.repeat.set(32, 32)
-	const planetMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff, map: groundTexture })
+	const skyGeometry = new THREE.SphereGeometry(1000, 32, 32)
+	const skyTexture = new THREE.TextureLoader().load(sky)
+	const skyMaterial = new THREE.MeshBasicMaterial({ map: skyTexture })
+	skyMaterial.side = THREE.BackSide
 	return function constructor() {
-		this.worldSpace = new THREE.Object3D()
-		this.worldSpace.position.set(0, 0, -planetRadius)
-		this.planet = new THREE.Mesh(planetGeometry, planetMaterial)
-		this.worldSpace.add(this.planet)
+		const planet = new THREE.Mesh(planetGeometry, planetMaterial)
+		planet.position.set(0, 0, -(2*planetRadius + 50))
 
-		let hemisphereLight = new THREE.HemisphereLight(0xaaaaaa, 0x402000, 1.0);
-		hemisphereLight.position.set(0, 0, planetRadius + 50)
-		this.planet.add(hemisphereLight);
+		const tank = new Tank()
+		planet.add(tank.root)
 
-		let directionalLight = new THREE.DirectionalLight(0xaaaaaa, 1.0)
-		directionalLight.position.set(0, 0, planetRadius * 50)
-		directionalLight.target = this.planet
-		this.planet.add(directionalLight);
+		const directionalLight = new THREE.DirectionalLight(0xffcccc, 1.0)
+		directionalLight.position.set(planetRadius * 50, 0, 0)
+		directionalLight.target = planet
+		planet.add(directionalLight);
 
-		this.root = this.worldSpace
+		const ambientLight = new THREE.AmbientLight(0xff6666, 0.1)
+		planet.add(ambientLight);
 
-		this.update = (goals) => {
-			const a = THREE.Math.clamp(1 - (goals.player.doneBy - performance.now()) / (GAMETICK), 0.0, 1.0)
-			let q = goals.player.quaternion.clone().conjugate()
-			this.worldSpace.quaternion.slerp(q, a)
+		const sky = new THREE.Mesh(skyGeometry, skyMaterial)
+		planet.add(sky)
+
+		const camera = new THREE.PerspectiveCamera(45, 1, 1, 2000)
+		//camera.position.set(0, 0, (2*planetRadius + 50))
+		function setWindowSize() {
+			camera.aspect = window.innerWidth / window.innerHeight
+			camera.updateProjectionMatrix();
+		}
+		setWindowSize()
+		window.addEventListener('resize', setWindowSize);
+		tank.root.add(camera)
+		camera.position.set(0, -50, 50)
+		camera.rotation.x = 5 * Math.PI / 16
+
+		this.camera = camera
+		this.root = new THREE.Object3D()
+		this.root.add(planet)
+
+		const drift = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), 0.0001)
+		this.update = (state, prevState, a) => {
+			const q1 = deserializeQuaternion(prevState.tank.quaternion)
+			const q2 = deserializeQuaternion(state.tank.quaternion)
+			let q = q1.slerp(q2, a)
+			//camera.setRotationFromQuaternion(q)
+			planet.setRotationFromQuaternion(q.conjugate())
+			//sky.setRotationFromQuaternion(q)
+			//sky.applyQuaternion(skyDrift)
+			//skyDrift.multiply(drift)
+			sky.applyQuaternion(drift)
+			tank.update(state, prevState, a)
 		}
 	}
 })()
 
 
 function main() {
-	var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 100)
-	camera.rotation.x = Math.PI / 4
-	camera.translateZ(15)
-
 	const renderer = new THREE.WebGLRenderer({ antialias: true })
 	document.body.appendChild(renderer.domElement)
 
-	const setWindowSize = () => {
-		camera.aspect = window.innerWidth / window.innerHeight;
-		camera.updateProjectionMatrix();
-		renderer.setSize( window.innerWidth, window.innerHeight );
+	function setWindowSize() {
+		renderer.setSize(window.innerWidth, window.innerHeight);
 	}
 	setWindowSize()
-	window.addEventListener('resize', setWindowSize, false);
+	window.addEventListener('resize', setWindowSize);
 
-	let scene = new THREE.Scene()
-	scene.background = new THREE.Color(0xbbbbff)
+	const scene = new THREE.Scene()
+	/*
+	const sky = new THREE.CubeTextureLoader().load([
+		skyLeft,
+		skyRight,
+		skyTop,
+		skyBottom,
+		skyFront,
+		skyBack,
+	])
+	scene.background = sky
+	*/
 
-	let world = new World()
-	scene.add(world.root)
+	const universe = new Universe()
+	scene.add(universe.root)
 
-	let tank = new Tank()
-	scene.add(tank.root)
-
-	var stats = new Stats()
+	let stats = new Stats()
 	stats.showPanel(0)
 	document.body.appendChild(stats.dom)
 
-	var goals
+	let state, prevState
 	const worker = new Worker()
 	worker.onmessage = ({ data: data }) => {
-		goals = data
-		goals.player.quaternion.__proto__ = THREE.Quaternion.prototype
+		prevState = state
+		state = data
 	}
 	window.addEventListener('keydown', e => {
 		worker.postMessage({
@@ -151,10 +201,10 @@ function main() {
 	function animate() {
 		stats.begin()
 
-		if (goals) {
-			world.update(goals)
-			tank.update(goals.player)
-			renderer.render(scene, camera)
+		if (state && prevState) {
+			let a = THREE.Math.clamp((performance.now() - prevState.time) / (state.time - prevState.time), 0, 1)
+			universe.update(state, prevState, a)
+			renderer.render(scene, universe.camera)
 		}
 
 		stats.end()
