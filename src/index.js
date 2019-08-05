@@ -90,7 +90,7 @@ function deserializeQuaternion(quaternion) {
 }
 
 const Universe = (function wrapper() {
-	const planetGeometry = new THREE.SphereGeometry(planetRadius, 32, 32)
+	const planetGeometry = new THREE.SphereGeometry(planetRadius, 64, 64)
 	const groundTexture = new THREE.TextureLoader().load(mars)
 	const planetMaterial = new THREE.MeshLambertMaterial({ map: groundTexture })
 
@@ -105,16 +105,16 @@ const Universe = (function wrapper() {
 		const tank = new Tank()
 		planet.add(tank.root)
 
+		const sky = new THREE.Mesh(skyGeometry, skyMaterial)
+		planet.add(sky)
+
 		const directionalLight = new THREE.DirectionalLight(0xffcccc, 1.0)
 		directionalLight.position.set(planetRadius * 50, 0, 0)
 		directionalLight.target = planet
-		planet.add(directionalLight);
+		sky.add(directionalLight);
 
 		const ambientLight = new THREE.AmbientLight(0xff6666, 0.1)
-		planet.add(ambientLight);
-
-		const sky = new THREE.Mesh(skyGeometry, skyMaterial)
-		planet.add(sky)
+		sky.add(ambientLight);
 
 		const camera = new THREE.PerspectiveCamera(45, 1, 1, 2000)
 		//camera.position.set(0, 0, (2*planetRadius + 50))
