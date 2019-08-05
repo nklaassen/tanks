@@ -6,12 +6,6 @@ import mars from '../assets/2k_mars.jpg'
 import sky from '../assets/starmap_4k.jpg'
 import Worker from './engine.worker.js'
 import { messageTypes } from './messages.js'
-import skyTop from '../assets/ulukai/redeclipse_up.png'
-import skyBottom from '../assets/ulukai/redeclipse_dn.png'
-import skyLeft from '../assets/ulukai/redeclipse_lf.png'
-import skyRight from '../assets/ulukai/redeclipse_rt.png'
-import skyFront from '../assets/ulukai/redeclipse_ft.png'
-import skyBack from '../assets/ulukai/redeclipse_bk.png'
 
 const UP = 'ArrowUp'
 const DOWN = 'ArrowDown'
@@ -160,17 +154,6 @@ function main() {
 	window.addEventListener('resize', setWindowSize);
 
 	const scene = new THREE.Scene()
-	/*
-	const sky = new THREE.CubeTextureLoader().load([
-		skyLeft,
-		skyRight,
-		skyTop,
-		skyBottom,
-		skyFront,
-		skyBack,
-	])
-	scene.background = sky
-	*/
 
 	const universe = new Universe()
 	scene.add(universe.root)
