@@ -15,20 +15,40 @@ function updateState(state, events) {
 	tank.updateState(state, events)
 }
 
-const events = new Set()
+// for storing keys that are held down
+const keys = new Set()
+var spaceHeld = false
 
 onmessage = function(m) {
 	switch(m.data.type) {
-		case messageTypes.KEYDOWN:
-			events.add(keyEventMap[m.data.val])
+		case messageTypes.KEYDOWN: 
+			keys.add(m.data.val)
 			break
 		case messageTypes.KEYUP:
-			events.delete(keyEventMap[m.data.val])
+			keys.delete(m.data.val)
+			if (m.data.val === ' ') {
+				spaceHeld = false
+			}
 			break
 	}
 }
 
+function getKeyEvents() {
+	const events = new Set()
+	for (let key of keys) {
+		if (key in keyEventMap) {
+			events.add(keyEventMap[key])
+		}
+	}
+	if (keys.has(' ') && !spaceHeld) {
+		events.add(eventTypes.FIRE)
+		spaceHeld = true
+	}
+	return events
+}
+
 setInterval(() => {
+	const events = getKeyEvents()
 	updateState(state, events)
 	postMessage(state)
 }, GAMETICK)

@@ -13,6 +13,7 @@ export function initState() {
 			rotationUp: 0, // [0,90]
 			rotationLeft: 0, // [-180,180]
 		},
+		missiles: [],
 	}
 }
 
@@ -43,6 +44,13 @@ export function updateState(state, events) {
 			case eventTypes.R_RIGHT:
 				state.tank.quaternion.multiply(right)
 				break
+			case eventTypes.FIRE:
+				createMissile(state)
+				break
 		}
 	})
+}
+
+function createMissile(state) {
+	console.log('createMissile start')
 }

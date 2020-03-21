@@ -8,7 +8,8 @@ export const eventTypes = {
 	L_DOWN       : 6,
 	L_LEFT       : 7,
 	L_RIGHT      : 8,
-	NEW_OPPONENT : 9,
+	FIRE         : 9,
+	NEW_OPPONENT : 10,
 }
 
 export const keyEventMap = {
@@ -20,5 +21,4 @@ export const keyEventMap = {
 	's'          : eventTypes.L_DOWN,
 	'a'          : eventTypes.L_LEFT,
 	'd'          : eventTypes.L_RIGHT,
-	' '          : eventTypes.NEW_OPPONENT,
 }

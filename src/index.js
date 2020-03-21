@@ -88,7 +88,7 @@ const Universe = (function wrapper() {
 	const groundTexture = new THREE.TextureLoader().load(mars)
 	const planetMaterial = new THREE.MeshLambertMaterial({ map: groundTexture })
 
-	const skyGeometry = new THREE.SphereGeometry(1000, 32, 32)
+	const skyGeometry = new THREE.SphereGeometry(100000, 32, 32)
 	const skyTexture = new THREE.TextureLoader().load(sky)
 	const skyMaterial = new THREE.MeshBasicMaterial({ map: skyTexture })
 	skyMaterial.side = THREE.BackSide
@@ -110,7 +110,7 @@ const Universe = (function wrapper() {
 		const ambientLight = new THREE.AmbientLight(0xff6666, 0.1)
 		sky.add(ambientLight);
 
-		const camera = new THREE.PerspectiveCamera(45, 1, 1, 2000)
+		const camera = new THREE.PerspectiveCamera(45, 1, 1, 120000)
 		//camera.position.set(0, 0, (2*planetRadius + 50))
 		function setWindowSize() {
 			camera.aspect = window.innerWidth / window.innerHeight
