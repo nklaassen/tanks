@@ -39,8 +39,8 @@ function Tank() {
 	gunBox.add(gun)
 
 	this.update = (state) => {
-		gunBox.rotation.z = THREE.Math.degToRad( state.tank.gun.rotationLeft )
-		gun.rotation.x = THREE.Math.degToRad( state.tank.gun.rotationUp )
+		gunBox.rotation.z = THREE.Math.degToRad( state.gun.rotationLeft )
+		gun.rotation.x = THREE.Math.degToRad( state.gun.rotationUp )
 	}
 }
 

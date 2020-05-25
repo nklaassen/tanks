@@ -1,13 +1,20 @@
 import { messageTypes } from './messages.js'
 import * as tank from './tank.js'
 import { eventTypes, keyEventMap } from './events.js'
+import { v4 as uuidv4 } from 'uuid'
 
 const GAMETICK = 50 // milliseconds
 
+const tanks = new Map()
+tanks.set( uuidv4(), tank.initState() )
+tanks.set( uuidv4(), tank.initState() )
+const t = tanks.entries().next().value
+
 var state = {
 	time: performance.now(),
-	tank: tank.initState(),
-	opponents: [],
+	tank: t[1],
+	id: t[0],
+	tanks: tanks,
 }
 
 function updateState(state, events) {

@@ -13,11 +13,10 @@ export function initState() {
 			rotationUp: 0, // [0,90]
 			rotationLeft: 0, // [-180,180]
 		},
-		missiles: [],
 	}
 }
 
-export function updateState(state, events) {
+export function updateState(state, events, id) {
 	events.forEach(event => {
 		switch(event) {
 			case eventTypes.L_UP:

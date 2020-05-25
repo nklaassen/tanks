@@ -4,9 +4,14 @@ import { messageTypes } from './engine/messages.js'
 import Worker from './engine/engine.worker.js'
 import Universe from './Universe.js'
 
-function main() {
+function getRenderer() {
 	const renderer = new THREE.WebGLRenderer({ antialias: true })
 	renderer.shadowMap.enabled = true
+	return renderer
+}
+
+function main() {
+	const renderer = getRenderer()
 	document.body.appendChild(renderer.domElement)
 
 	const universe = new Universe()

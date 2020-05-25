@@ -61,7 +61,8 @@ function Universe() {
 
 	const drift = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), 0.0005)
 	this.update = state => {
-		tank.update(state)
+		// console.debug(state)
+		tank.update(state.tanks.get(state.id))
 		const q = state.tank.quaternion
 		deserializeQuaternion(q)
 		tank.root.position.copy(origin).applyQuaternion(q)
