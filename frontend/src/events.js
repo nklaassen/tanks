@@ -21,4 +21,5 @@ export const keyEventMap = {
 	's'          : eventTypes.L_DOWN,
 	'a'          : eventTypes.L_LEFT,
 	'd'          : eventTypes.L_RIGHT,
+	' '          : eventTypes.FIRE,
 }

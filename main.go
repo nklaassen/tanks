@@ -10,16 +10,8 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func handleWebsocket(ws *websocket.Conn, server *Server) {
-	client := Client{
-		server: server,
-		ws:     ws,
-	}
-	client.runForever()
-}
-
 func getWebsocketHandler() http.HandlerFunc {
-	s := Server{}
+	s := newServer()
 	go s.runForever()
 	upgrader := websocket.Upgrader{}
 
@@ -29,7 +21,7 @@ func getWebsocketHandler() http.HandlerFunc {
 			log.Println(err)
 			return
 		}
-		handleWebsocket(ws, &s)
+		newClient(s, ws).runForever()
 	}
 }
 
@@ -42,6 +34,7 @@ func getPort() string {
 }
 
 func main() {
+	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 	fileserver := http.StripPrefix("/", http.FileServer(http.Dir("frontend/dist")))
 
 	r := mux.NewRouter()

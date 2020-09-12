@@ -1,67 +1,55 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"time"
+
+	"./universe"
 )
 
-const (
-	gameTick = 50 * time.Millisecond
-)
-
-type Gamestate map[string]interface{}
-type Update struct {
-	id      int
-	actions map[string]interface{}
-}
-
-type Server struct {
+type server struct {
 	// set of clients
-	clients    map[*Client]struct{}
-	register   chan *Client
-	unregister chan *Client
+	clients    map[*client]struct{}
+	register   chan *client
+	unregister chan *client
 
-	updates   chan *Update
-	gamestate Gamestate
+	updates   chan *universe.Update
+	gamestate *universe.Gamestate
 }
 
-func newServer() *Server {
-	return &Server{
-		clients:    make(map[*Client]struct{}),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
-		updates:    make(chan *Update),
+func newServer() *server {
+	return &server{
+		clients:    make(map[*client]struct{}),
+		register:   make(chan *client),
+		unregister: make(chan *client),
+		updates:    make(chan *universe.Update),
+		gamestate:  universe.NewGameState(),
 	}
 }
 
-func (s *Server) updateState(update *Update) {
-	// handle the update
-}
-
-func (s *Server) runForever() {
-	log.Println("Server runForever")
-	ticker := time.NewTicker(gameTick)
+func (s *server) runForever() {
+	log.Println("server runForever")
+	ticker := time.NewTicker(universe.GameTick)
 	for {
 		select {
 		case c := <-s.register:
-			log.Println("Server got new client")
+			log.Println("server got new client")
 			s.clients[c] = struct{}{}
 		case c := <-s.unregister:
-			log.Println("Server unregistered client")
+			log.Println("server unregistered client")
+			s.gamestate.RemovePlayer(c.id)
 			delete(s.clients, c)
 		case u := <-s.updates:
-			log.Println("Server received update from client")
+			log.Println("server received update from client")
 			// process updates to gamestate immediately
-			s.updateState(u)
+			s.gamestate.Update(u)
 		case <-ticker.C:
 			// every gametick, marshal the gamestate to JSON, and send to all clients
-			if stateBytes, err := json.Marshal(s.gamestate); err != nil {
-				log.Printf("Error marshalling gamestate to json: %v\n", err)
-			} else {
-				for c := range s.clients {
-					c.send <- stateBytes
-				}
+			json := s.gamestate.Serialize()
+			for c := range s.clients {
+				log.Println("gamestate: ", s.gamestate)
+				log.Println("json: ", string(json))
+				c.send <- json
 			}
 		}
 	}

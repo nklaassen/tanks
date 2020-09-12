@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import metal from '../assets/metal.jpg'
+import metal from '../../assets/metal.jpg'
 
 const bodyWidth = 4
 const bodyLength = 6

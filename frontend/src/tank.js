@@ -1,10 +1,12 @@
 import { Quaternion, Vector3 } from 'three'
 import { eventTypes } from './events.js'
 
-const forward = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -0.1)
+const identity = new Quaternion()
+const forward = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -0.4)
 const reverse = forward.clone().conjugate()
-const left = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), 0.05)
+const left = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), 0.8)
 const right = left.clone().conjugate()
+const q = new Quaternion()
 
 export function initState() {
 	return {
@@ -17,7 +19,9 @@ export function initState() {
 }
 
 export function updateState(state, events, id) {
-	events.forEach(event => {
+	for(const [event, duration] of events) {
+		const seconds = duration/1000
+		console.log(seconds)
 		switch(event) {
 			case eventTypes.L_UP:
 				state.tank.gun.rotationUp += 5
@@ -32,22 +36,26 @@ export function updateState(state, events, id) {
 				state.tank.gun.rotationLeft -= 5
 				break
 			case eventTypes.R_UP:
-				state.tank.quaternion.multiply(forward)
+				q.copy(identity).slerp(forward,seconds)
+				state.tank.quaternion.multiply(q)
 				break
 			case eventTypes.R_DOWN:
-				state.tank.quaternion.multiply(reverse)
+				q.copy(identity).slerp(reverse,seconds)
+				state.tank.quaternion.multiply(q)
 				break
 			case eventTypes.R_LEFT:
-				state.tank.quaternion.multiply(left)
+				q.copy(identity).slerp(left,seconds)
+				state.tank.quaternion.multiply(q)
 				break
 			case eventTypes.R_RIGHT:
-				state.tank.quaternion.multiply(right)
+				q.copy(identity).slerp(right,seconds)
+				state.tank.quaternion.multiply(q)
 				break
 			case eventTypes.FIRE:
 				createMissile(state)
 				break
 		}
-	})
+	}
 }
 
 function createMissile(state) {

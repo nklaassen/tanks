@@ -1,6 +1,6 @@
 import * as THREE from 'three'
-import mars from '../assets/2k_mars.jpg'
-import sky from '../assets/starmap_4k.jpg'
+import mars from '../../assets/2k_mars.jpg'
+import sky from '../../assets/starmap_4k.jpg'
 import Tank from './Tank.js'
 
 const planetRadius = 200
@@ -14,7 +14,7 @@ const planetGeometry = new THREE.SphereGeometry(planetRadius, 64, 64)
 const groundTexture = new THREE.TextureLoader().load(mars)
 const planetMaterial = new THREE.MeshLambertMaterial({ map: groundTexture })
 
-const skyGeometry = new THREE.SphereGeometry(sunHeight, 16, 8)
+const skyGeometry = new THREE.SphereGeometry(sunHeight, 32, 16)
 const skyTexture = new THREE.TextureLoader().load(sky)
 const skyMaterial = new THREE.MeshBasicMaterial({ map: skyTexture })
 skyMaterial.side = THREE.BackSide
@@ -59,15 +59,18 @@ function Universe() {
 	tank.root.position.set(0, 0, planetRadius)
 	const origin = tank.root.position.clone()
 
-	const drift = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), 0.0005)
-	this.update = state => {
-		// console.debug(state)
+	this.updateState = state => {
 		tank.update(state.tanks.get(state.id))
 		const q = state.tank.quaternion
 		deserializeQuaternion(q)
 		tank.root.position.copy(origin).applyQuaternion(q)
 		tank.root.setRotationFromQuaternion(q)
-		sky.applyQuaternion(drift)
+	}
+
+	const drift = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), 0.01)
+	this.updateStateless = dt => {
+		const _drift = new THREE.Quaternion().slerp(drift, dt/1000)
+		sky.applyQuaternion(_drift)
 	}
 }
 
