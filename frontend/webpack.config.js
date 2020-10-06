@@ -5,7 +5,13 @@ module.exports = {
 	entry: './src/index.js',
 	devtool: 'inline-source-map',
 	devServer: {
-		contentBase: './dist'
+		contentBase: './dist',
+		proxy: {
+			'/ws': {
+				target: 'ws://localhost:3000',
+				ws: true
+			}
+		}
 	},
 	output: {
 		filename: 'main.js',

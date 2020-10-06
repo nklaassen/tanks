@@ -26,7 +26,7 @@ func getWebsocketHandler() http.HandlerFunc {
 }
 
 func getPort() string {
-	portNum := "8080"
+	portNum := "3000"
 	if len(os.Args) > 1 {
 		portNum = os.Args[1]
 	}
