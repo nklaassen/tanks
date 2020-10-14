@@ -89,8 +89,12 @@ function updateLocalState(events, state) {
 }
 
 function updateState(state, update) {
-	const q = Object.values(update.tanks)[0].q
+
+	const t = Object.values(update.tanks)[0]
+	const q = t.q
 	state.tank.quaternion.set(q.x, q.y, q.z, q.w)
+	state.tank.gun.rotationLeft = t.gl
+	state.tank.gun.rotationUp = t.gu
 }
 
 function getLocalEvents() {

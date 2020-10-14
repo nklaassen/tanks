@@ -23,12 +23,13 @@ const (
 )
 
 type TankState struct {
-	TankRotation mgl32.Quat `json:""`
-	gunRotation  mgl32.Quat
+	TankRotation mgl32.Quat
+	gunLeft      int16 // degrees
+	gunUp        int16 // degrees
 }
 
 func newTankState() *TankState {
-	return &TankState{mgl32.QuatIdent(), mgl32.QuatIdent()}
+	return &TankState{mgl32.QuatIdent(), 0, 0}
 }
 
 var identity = mgl32.QuatIdent()
@@ -54,9 +55,13 @@ func (ts *TankState) Update(actions map[string]uint32) {
 			rot := mgl32.QuatNlerp(identity, right, seconds)
 			ts.TankRotation = ts.TankRotation.Mul(rot)
 		case L_UP:
+			ts.gunUp += 5
 		case L_DOWN:
+			ts.gunUp -= 5
 		case L_LEFT:
+			ts.gunLeft += 5
 		case L_RIGHT:
+			ts.gunLeft -= 5
 		case FIRE:
 		}
 	}
@@ -105,10 +110,12 @@ func (ts *TankState) MarshalJSON() ([]byte, error) {
 		Z float32 `json:"z"`
 	}
 	type tank struct {
-		Q quat `json:"q"`
+		Q  quat  `json:"q"`
+		GL int16 `json:"gl"`
+		GU int16 `json:"gu"`
 	}
 	q := quat{ts.TankRotation.W, ts.TankRotation.V[0], ts.TankRotation.V[1], ts.TankRotation.V[2]}
-	o := tank{q}
+	o := tank{q, ts.gunLeft, ts.gunUp}
 	return json.Marshal(o)
 }
 
