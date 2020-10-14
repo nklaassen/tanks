@@ -6,8 +6,8 @@ import Tank from './Tank.js'
 const planetRadius = 200
 const sunHeight = planetRadius + 100
 
-function deserializeQuaternion(quaternion) {
-	quaternion.__proto__ = THREE.Quaternion.prototype
+function deserializeQuaternion(q) {
+	return new THREE.Quaternion(q.x, q.y, q.z, q.w)
 }
 
 const planetGeometry = new THREE.SphereGeometry(planetRadius, 64, 64)
@@ -25,6 +25,7 @@ function Universe() {
 	const tank = new Tank()
 	tank.root.translateZ( planetRadius )
 	planet.add(tank.root)
+	this.tank = tank
 
 	const sky = new THREE.Mesh(skyGeometry, skyMaterial)
 	planet.add(sky)
@@ -53,18 +54,34 @@ function Universe() {
 	this.camera = camera
 	this.root = new THREE.Object3D()
 	// this.root.add(sunHelper)
-	//this.root.add(sunShadowHelper)
+	// this.root.add(sunShadowHelper)
 	this.root.add(planet)
 
 	tank.root.position.set(0, 0, planetRadius)
 	const origin = tank.root.position.clone()
 
+	const tanks = new Map()
+
 	this.updateState = state => {
-		tank.update(state.tanks.get(state.id))
-		const q = state.tank.quaternion
-		deserializeQuaternion(q)
-		tank.root.position.copy(origin).applyQuaternion(q)
-		tank.root.setRotationFromQuaternion(q)
+		for(const [id, tankState] of Object.entries(state.tanks)) {
+			let tank
+			if(!tanks.has(id)) {
+				if(id == state.id) {
+					tank = this.tank
+				} else {
+					tank = new Tank()
+					tank.root.translateZ( planetRadius )
+					planet.add(tank.root)
+				}
+				tanks.set(id, tank)
+			} else {
+				tank = tanks.get(id)
+			}
+			tank.update(tankState)
+			const q = deserializeQuaternion(tankState.q)
+			tank.root.position.copy(origin).applyQuaternion(q)
+			tank.root.setRotationFromQuaternion(q)
+		}
 	}
 
 	const drift = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), 0.01)

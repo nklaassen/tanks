@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"./universe"
@@ -30,12 +31,12 @@ func newClient(server *server, ws *websocket.Conn) *client {
 
 func (c *client) readForever() {
 	log.Println("New client readForever")
+	defer func() { c.doneReading <- struct{}{} }()
 	for {
 		update := universe.Update{}
 		update.Id = c.id
 		if err := c.ws.ReadJSON(&update.Actions); err != nil {
 			log.Printf("readForever: Error reading from websocket: %v\n", err)
-			c.doneReading <- struct{}{}
 			break
 		}
 		log.Println("readForever: got message: ", update)
@@ -43,7 +44,6 @@ func (c *client) readForever() {
 		select {
 		case <-c.doneWriting:
 			log.Println("readForever: got doneWriting")
-			c.doneReading <- struct{}{}
 			break
 		default:
 		}
@@ -52,18 +52,25 @@ func (c *client) readForever() {
 
 func (c *client) writeForever() {
 	log.Println("New client writeForever")
+	defer func() { c.doneWriting <- struct{}{} }()
+
+	message := []byte(`{"id":"` + fmt.Sprint(c.id) + `"}`)
+	log.Println("writing id message to websocket: ", string(message))
+	if err := c.ws.WriteMessage(websocket.TextMessage, message); err != nil {
+		log.Printf("Error writing to websocket: %v\n", err)
+		return
+	}
+
 	for {
 		log.Println("Reading from c.send: ", c.send)
-		gs := <-c.send
-		log.Println("writing to websocket: ", gs)
-		if err := c.ws.WriteMessage(websocket.TextMessage, gs); err != nil {
+		message := <-c.send
+		log.Println("writing to websocket: ", string(message))
+		if err := c.ws.WriteMessage(websocket.TextMessage, message); err != nil {
 			log.Printf("Error writing to websocket: %v\n", err)
-			c.doneWriting <- struct{}{}
 			break
 		}
 		select {
 		case <-c.doneReading:
-			c.doneWriting <- struct{}{}
 			break
 		default:
 		}

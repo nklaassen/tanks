@@ -69,16 +69,10 @@ function Keys() {
 const keys = new Keys()
 
 function getInitialState() {
-	const tanks = new Map()
-	tanks.set( 0, tank.initState() )
-	tanks.set( 1, tank.initState() )
-	const t = tanks.entries().next().value
-
 	return {
 		time: performance.now(),
-		tank: t[1],
-		id: t[0],
-		tanks: tanks,
+		id: '',
+		tanks: {},
 	}
 }
 
@@ -89,12 +83,12 @@ function updateLocalState(events, state) {
 }
 
 function updateState(state, update) {
-
-	const t = Object.values(update.tanks)[0]
-	const q = t.q
-	state.tank.quaternion.set(q.x, q.y, q.z, q.w)
-	state.tank.gun.rotationLeft = t.gl
-	state.tank.gun.rotationUp = t.gu
+	if('id' in update) {
+		state.id = update.id
+		console.log('got id', state.id)
+		return
+	}
+	state.tanks = update.tanks
 }
 
 function getLocalEvents() {
@@ -154,7 +148,6 @@ function main() {
 
 		let events = getLocalEvents()
 		if(events.size && ws.readyState == 1) {
-			console.log('sending on ws', serialize(events))
 			ws.send( serialize(events) )
 		}
 		//updateLocalState(events, state)
