@@ -1,15 +1,15 @@
 
 export const eventTypes = {
-	R_UP         : 1,
-	R_DOWN       : 2,
-	R_LEFT       : 3,
-	R_RIGHT      : 4,
-	L_UP         : 5,
-	L_DOWN       : 6,
-	L_LEFT       : 7,
-	L_RIGHT      : 8,
-	FIRE         : 9,
-	NEW_OPPONENT : 10,
+	R_UP         : '1',
+	R_DOWN       : '2',
+	R_LEFT       : '3',
+	R_RIGHT      : '4',
+	L_UP         : '5',
+	L_DOWN       : '6',
+	L_LEFT       : '7',
+	L_RIGHT      : '8',
+	FIRE         : '9',
+	NEW_OPPONENT : '10',
 }
 
 export const keyEventMap = {

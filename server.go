@@ -46,10 +46,13 @@ func (s *server) runForever() {
 		case <-ticker.C:
 			// every gametick, marshal the gamestate to JSON, and send to all clients
 			json := s.gamestate.Serialize()
+			log.Println("json: ", string(json))
 			for c := range s.clients {
-				log.Println("gamestate: ", s.gamestate)
-				log.Println("json: ", string(json))
-				c.send <- json
+				select {
+				case c.send <- json:
+				default:
+					log.Println("failed to send json to client")
+				}
 			}
 		}
 	}

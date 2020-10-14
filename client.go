@@ -32,15 +32,17 @@ func (c *client) readForever() {
 	log.Println("New client readForever")
 	for {
 		update := universe.Update{}
-		if err := c.ws.ReadJSON(&update); err != nil {
-			log.Printf("Error reading from websocket: %v\n", err)
+		update.Id = c.id
+		if err := c.ws.ReadJSON(&update.Actions); err != nil {
+			log.Printf("readForever: Error reading from websocket: %v\n", err)
 			c.doneReading <- struct{}{}
 			break
 		}
-		log.Println("got message: ", update)
+		log.Println("readForever: got message: ", update)
 		c.server.updates <- &update
 		select {
 		case <-c.doneWriting:
+			log.Println("readForever: got doneWriting")
 			c.doneReading <- struct{}{}
 			break
 		default:
@@ -57,6 +59,7 @@ func (c *client) writeForever() {
 		if err := c.ws.WriteMessage(websocket.TextMessage, gs); err != nil {
 			log.Printf("Error writing to websocket: %v\n", err)
 			c.doneWriting <- struct{}{}
+			break
 		}
 		select {
 		case <-c.doneReading:

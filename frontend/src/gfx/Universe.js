@@ -53,7 +53,7 @@ function Universe() {
 	this.camera = camera
 	this.root = new THREE.Object3D()
 	// this.root.add(sunHelper)
-	this.root.add(sunShadowHelper)
+	//this.root.add(sunShadowHelper)
 	this.root.add(planet)
 
 	tank.root.position.set(0, 0, planetRadius)

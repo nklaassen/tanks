@@ -66,28 +66,50 @@ function Keys() {
 		return keysForLastFrame
 	}
 }
+const keys = new Keys()
 
-const tanks = new Map()
-tanks.set( 0, tank.initState() )
-tanks.set( 1, tank.initState() )
-const t = tanks.entries().next().value
+function getInitialState() {
+	const tanks = new Map()
+	tanks.set( 0, tank.initState() )
+	tanks.set( 1, tank.initState() )
+	const t = tanks.entries().next().value
 
-var state = {
-	time: performance.now(),
-	tank: t[1],
-	id: t[0],
-	tanks: tanks,
+	return {
+		time: performance.now(),
+		tank: t[1],
+		id: t[0],
+		tanks: tanks,
+	}
 }
 
-function updateState(keyDurs) {
-		const events = new Map()
-		for(const [key, duration] of keyDurs) {
-			if(key in keyEventMap) {
-				events.set(keyEventMap[key], duration)
-			}
+function updateLocalState(events, state) {
+	tank.updateState(state, events)
+	state.time = performance.now()
+	return state
+}
+
+function updateState(state, update) {
+	const q = Object.values(update.tanks)[0].q
+	state.tank.quaternion.set(q.x, q.y, q.z, q.w)
+}
+
+function getLocalEvents() {
+	const pressed = keys.getKeysForLastFrame()
+	const events = new Map()
+	for(const [key, duration] of pressed) {
+		if(key in keyEventMap) {
+			events.set(keyEventMap[key], duration)
 		}
-		tank.updateState(state, events)
-		state.time = performance.now()
+	}
+	return events
+}
+
+function serialize(events) {
+	const o = {}
+	for(const [event, duration] of events) {
+		o[event] = duration | 0
+	}
+	return JSON.stringify(o)
 }
 
 function main() {
@@ -108,6 +130,16 @@ function main() {
 	const keys = new Keys()
 	let update = false
 
+	let loc = window.location
+	let ws_uri = 'ws://' + loc.host + '/ws'
+	const ws = new WebSocket( ws_uri )
+	ws.onclose = console.error
+	ws.onerrer = console.error
+	ws.onmessage = m => updateState( state, JSON.parse(m.data) )
+
+	let state = getInitialState()
+	window.state = state
+
 	let lastFrame = performance.now()
 	function animate(t) {
 		stats.begin()
@@ -115,13 +147,16 @@ function main() {
 		lastFrame = t
 
 		universe.updateStateless(dt)
-		renderer.render(scene, universe.camera)
 
-		const pressed = keys.getKeysForLastFrame()
-		if( pressed.size != 0 ) {
-			updateState(pressed)
-			universe.updateState(state)
+		let events = getLocalEvents()
+		if(events.size && ws.readyState == 1) {
+			console.log('sending on ws', serialize(events))
+			ws.send( serialize(events) )
 		}
+		//updateLocalState(events, state)
+		universe.updateState(state)
+
+		renderer.render(scene, universe.camera)
 
 		stats.end()
 		requestAnimationFrame(animate)

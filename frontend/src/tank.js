@@ -21,7 +21,7 @@ export function initState() {
 export function updateState(state, events, id) {
 	for(const [event, duration] of events) {
 		const seconds = duration/1000
-		console.log(seconds)
+		//console.log(seconds)
 		switch(event) {
 			case eventTypes.L_UP:
 				state.tank.gun.rotationUp += 5
