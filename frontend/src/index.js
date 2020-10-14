@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import * as Stats from "stats.js";
-import { messageTypes } from "./messages.js";
 import Universe from "./gfx/Universe.js";
 import * as tank from "./tank.js";
 import { eventTypes, keyEventMap } from "./events.js";
